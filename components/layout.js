@@ -3,11 +3,37 @@ import Image from 'next/image'
 import styles from './layout.module.css'
 import utilStyles from '../styles/utils.module.css'
 import Link from 'next/link'
+import { USER_INFO_KEY } from '../constants/common'
+import { useContext, useEffect } from 'react'
+import { AppContext } from '../pages/_app'
+import { localStorageGetItem, localStorageMergeItem } from '../utils/localStorage'
 
-const name = 'Your Name'
 export const siteTitle = 'Next.js Sample Website'
 
 export default function Layout({ children, home }) {
+    const { context, setContext } = useContext(AppContext)
+    const name = context.name || 'Your name'
+
+    useEffect(() => {
+        const { name: storedName } = localStorageGetItem(USER_INFO_KEY) || {}
+
+        if (storedName) {
+            setContext((prev) => ({ ...prev, name: storedName }))
+        }
+    }, [])
+
+    const handleClickName = () => {
+        const { name: storedName } = localStorageGetItem(USER_INFO_KEY) || {}
+
+        if (!storedName) {
+            const newName = prompt('Ваше имя?')
+            localStorageMergeItem(USER_INFO_KEY, { name: newName })
+            setContext((prev) => ({ ...prev, name: newName }))
+        } else {
+            alert('Хватит жмякать!')
+        }
+    }
+
     return (
         <div className={ styles.container }>
             <Head>
@@ -36,7 +62,8 @@ export default function Layout({ children, home }) {
                             width={ 144 }
                             alt={ name }
                         />
-                        <h1 className={ utilStyles.heading2Xl }>{ name }</h1>
+                        <h1 className={ utilStyles.heading2Xl } onClick={ handleClickName }>{ name }</h1>
+                        { (context.name && context.about) && <span className={ styles.success }>Вы восхитительны!</span> }
                     </>
                 ) : (
                     <>
